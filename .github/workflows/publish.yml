@@ -36,14 +36,16 @@ jobs:
           fi
 
       - name: Set up JDK 21 and GitHub Maven auth
+        # setup-java imports the GPG key (gpg-private-key/gpg-passphrase) and
+        # sets up Maven. The `github` server auth is written explicitly in the
+        # next step (settings.xml heredoc) using GITHUB_ACTOR/GITHUB_TOKEN env
+        # vars, so server-username/server-password are left at their defaults.
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "21"
           cache: "maven"
           server-id: github
-          server-username: github.actor
-          server-password: github.token
           token: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
           gpg-private-key: ${{ secrets.MAVEN_CENTRAL_GPG_PRIVATE_KEY }}
           gpg-passphrase: ${{ secrets.MAVEN_CENTRAL_GPG_PASSPHRASE }}
