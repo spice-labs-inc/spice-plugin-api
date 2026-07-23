@@ -1,0 +1,38 @@
+name: Publish spice-plugin-api SNAPSHOT
+
+# Publishes the in-repo -SNAPSHOT plugin-api to GitHub Packages on every push to
+# main. Consumers (spice-bom, spice-labs-cli dev/CI builds) depend on the
+# SNAPSHOT plugin-api, so a SNAPSHOT must be resolvable there after every merged
+# change. Releases go through publish.yml (tag v<x.y.z>) — this workflow never
+# publishes a release version.
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish_snapshot:
+    name: Publish spice-plugin-api SNAPSHOT to GitHub Packages
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up JDK 21 and GitHub Maven auth
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+          cache: "maven"
+          server-id: github
+          server-username: ${{ secrets.GH_USERNAME_SG }}
+          server-password: ${{ secrets.GH_TOKEN }}
+
+      - name: Publish SNAPSHOT plugin-api to GitHub Packages
+        run: mvn --batch-mode clean deploy -P github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
