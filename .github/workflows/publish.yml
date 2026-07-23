@@ -42,8 +42,8 @@ jobs:
           java-version: "21"
           cache: "maven"
           server-id: github
-          server-username: ${{ secrets.GH_USERNAME_SG }}
-          server-password: ${{ secrets.GH_TOKEN }}
+          server-username: github.actor
+          server-password: github.token
           token: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
           gpg-private-key: ${{ secrets.MAVEN_CENTRAL_GPG_PRIVATE_KEY }}
           gpg-passphrase: ${{ secrets.MAVEN_CENTRAL_GPG_PASSPHRASE }}
@@ -59,8 +59,8 @@ jobs:
             <servers>
               <server>
                 <id>github</id>
-                <username>${{ secrets.GH_USERNAME_SG }}</username>
-                <password>${{ secrets.GH_TOKEN }}</password>
+                <username>\${env.GITHUB_ACTOR}</username>
+                <password>\${env.GITHUB_TOKEN}</password>
               </server>
               <server>
                 <id>central</id>
@@ -72,21 +72,17 @@ jobs:
           </settings>
           EOF
 
-      - name: Import GPG key
-        run: |
-          echo "${{ secrets.MAVEN_CENTRAL_GPG_PRIVATE_KEY }}" | gpg --batch --import
-
       - name: Set plugin-api version from tag
         run: mvn --batch-mode versions:set -DnewVersion=${{ steps.validate.outputs.VERSION }} -DgenerateBackupPoms=false
 
       - name: Publish plugin-api to GitHub Packages
         run: mvn --batch-mode clean deploy -P github
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
           GPG_PASSPHRASE: ${{ secrets.MAVEN_CENTRAL_GPG_PASSPHRASE }}
 
       - name: Publish plugin-api to Maven Central
         run: mvn --batch-mode clean deploy -P maven-central
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
           GPG_PASSPHRASE: ${{ secrets.MAVEN_CENTRAL_GPG_PASSPHRASE }}
