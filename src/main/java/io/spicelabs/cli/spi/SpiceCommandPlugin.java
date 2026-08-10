@@ -85,8 +85,13 @@ public interface SpiceCommandPlugin {
   /**
    * The configuration groups this plugin reads.
    *
-   * <p>A group is a table in the user's configuration file named for a job rather than for
-   * whoever does it — {@code analysis}, {@code upload}, {@code pipeline}. Groups are
+   * <p>A group is a section of the user's configuration file named for a job rather than for
+   * whoever does it — {@code analysis}, {@code upload}, {@code pipeline}. Usually a table of
+   * settings; sometimes a list of things, such as an array of repositories.
+   *
+   * <p><strong>A group may not share a name with a command.</strong> At the root of a file a
+   * table is either a group or a command's scope, so {@code [registry.analysis]} can only have
+   * one reading if nothing called {@code registry} is also a group. Groups are
    * <em>shared</em>: a setting written once under {@code [analysis]} reaches every command
    * that claims {@code analysis}, whether built-in or from a plugin, so a user configures
    * the job and not each component that happens to perform part of it.

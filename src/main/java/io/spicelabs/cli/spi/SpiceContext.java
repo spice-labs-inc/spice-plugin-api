@@ -84,6 +84,11 @@ public interface SpiceContext {
    * what keeps this command free of every plugin's flag list — the previous attempt at
    * cross-program configuration failed exactly there.
    *
+   * <p>A group is usually a table of settings, and arrives as a {@code Map}. A group that
+   * names a list of things rather than a set of settings — an array of tables — arrives as a
+   * {@code List}, because there are no keys to layer: a later source replaces it whole or
+   * leaves it alone. That is why the value type here is {@code Object} rather than a map.
+   *
    * <p>Values are the TOML data model, exactly:
    * <ul>
    *   <li>{@link String}, {@link Long}, {@link Double}, {@link Boolean}</li>
@@ -104,7 +109,7 @@ public interface SpiceContext {
    * @return group name to that group's settings; never {@code null}, and empty for a plugin
    *     that claimed no groups or a run with no configuration file
    */
-  default Map<String, Map<String, Object>> configuration() {
+  default Map<String, Object> configuration() {
     return Map.of();
   }
 }
