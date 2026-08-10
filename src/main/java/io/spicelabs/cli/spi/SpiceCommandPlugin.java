@@ -83,6 +83,35 @@ public interface SpiceCommandPlugin {
   }
 
   /**
+   * The configuration groups this plugin reads.
+   *
+   * <p>A group is a table in the user's configuration file named for a job rather than for
+   * whoever does it — {@code analysis}, {@code upload}, {@code pipeline}. Groups are
+   * <em>shared</em>: a setting written once under {@code [analysis]} reaches every command
+   * that claims {@code analysis}, whether built-in or from a plugin, so a user configures
+   * the job and not each component that happens to perform part of it.
+   *
+   * <p>Claiming is what makes that safe. {@code spice} hands a plugin exactly the groups it
+   * names here and nothing else, so a plugin cannot read settings intended for another, and
+   * a table no command claims can be reported as a probable typo rather than silently doing
+   * nothing. Several commands claiming the same group is the normal case — that overlap is
+   * the sharing mechanism, not a conflict.
+   *
+   * <p>Within a claimed group {@code g}, {@code spice} resolves the shared {@code [g]} table
+   * overlaid by a {@code [<command path>.g]} table, so a user can set a value globally and
+   * override it for one command. The plugin receives the result and never learns which
+   * layer supplied what.
+   *
+   * <p>Returning an empty list — the default — means this plugin reads no configuration
+   * file settings at all, and {@link SpiceContext#configuration()} will be empty.
+   *
+   * @return the group names this plugin reads, e.g. {@code List.of("analysis", "pipeline")}
+   */
+  default java.util.List<String> configurationGroups() {
+    return java.util.List.of();
+  }
+
+  /**
    * A PowerShell tab-completion fragment contributing completions for this plugin's
    * command tree, or an empty string for none (the default).
    *

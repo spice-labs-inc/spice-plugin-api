@@ -39,7 +39,7 @@ public interface SpiceContext {
    * changes incompatibly; {@code spice} only mounts plugins whose
    * {@link SpiceCommandPlugin#apiVersion()} matches this value.
    */
-  int API_VERSION = 3;
+  int API_VERSION = 4;
 
   /** The running {@code spice} CLI version (e.g. for plugin {@code --version} output). */
   String version();
@@ -65,17 +65,26 @@ public interface SpiceContext {
   }
 
   /**
-   * This plugin's section of the run's configuration file, already parsed.
+   * The configuration groups this plugin claimed, resolved.
    *
-   * <p>{@code spice} reads one TOML file per run — named with {@code --config} or discovered
-   * in the platform's standard configuration directory — parses it once, and hands each
-   * plugin the table at its own command path. A plugin therefore never sees the file, never
-   * learns where its table sits in the tree, and never parses TOML that is not its own. The
-   * table is in the plugin's <em>own</em> schema, which {@code spice} carries without
-   * understanding.
+   * <p>Keyed by group name, so {@code configuration().get("analysis")} is that group's
+   * settings in the group's own vocabulary. A plugin receives exactly the groups it named in
+   * {@link SpiceCommandPlugin#configurationGroups()} — never the file, never another
+   * command's settings, and never a group it did not ask for.
    *
-   * <p>The table is a nested map, which is the TOML data model rather than a stand-in for it.
-   * Values are exactly:
+   * <p>{@code spice} has already done the layering: for each claimed group it read the
+   * shared {@code [group]} table, overlaid the command-scoped {@code [<command>.group]}
+   * table, then any {@code SPICE_GROUP_KEY} environment variables, so a value written once
+   * at the top level reaches every command that claims the group. What arrives here is the
+   * result. Which layer supplied a given value is deliberately not part of this API: it is
+   * reported by {@code spice} as it resolves, and printed by {@code spice config explain}.
+   *
+   * <p>{@code spice} still does not understand what any of it means. The values are in the
+   * group's schema, which the component that owns the group parses and validates. That is
+   * what keeps this command free of every plugin's flag list — the previous attempt at
+   * cross-program configuration failed exactly there.
+   *
+   * <p>Values are the TOML data model, exactly:
    * <ul>
    *   <li>{@link String}, {@link Long}, {@link Double}, {@link Boolean}</li>
    *   <li>{@link java.time.OffsetDateTime}, {@link java.time.LocalDateTime},
@@ -83,18 +92,19 @@ public interface SpiceContext {
    *   <li>{@code List<Object>} for arrays, whose elements are again drawn from this list</li>
    *   <li>{@code Map<String, Object>} for sub-tables</li>
    * </ul>
-   * so this API needs no TOML library and imposes none on plugin authors. A plugin that
-   * already has one can adapt the map back to its own representation.
+   * with one exception: a value that came from an environment variable is a {@link String},
+   * because the environment has no types and guessing one here would be worse than letting
+   * the component that knows the schema coerce it.
    *
-   * <p>Deliberately separate from {@link #passClaims()}: the config table is entirely
+   * <p>Deliberately separate from {@link #passClaims()}: these settings are entirely
    * user-authored, whereas pass claims are properties of the credential the platform issued
    * and nothing a user writes may supply or override them. Keeping the two reachable by
    * different methods is what stops that distinction eroding.
    *
-   * @return this plugin's table, or an empty map when there is no config file or it has no
-   *     table for this command; never {@code null}
+   * @return group name to that group's settings; never {@code null}, and empty for a plugin
+   *     that claimed no groups or a run with no configuration file
    */
-  default Map<String, Object> configuration() {
+  default Map<String, Map<String, Object>> configuration() {
     return Map.of();
   }
 }
