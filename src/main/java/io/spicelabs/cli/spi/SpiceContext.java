@@ -39,7 +39,7 @@ public interface SpiceContext {
    * changes incompatibly; {@code spice} only mounts plugins whose
    * {@link SpiceCommandPlugin#apiVersion()} matches this value.
    */
-  int API_VERSION = 4;
+  int API_VERSION = 5;
 
   /** The running {@code spice} CLI version (e.g. for plugin {@code --version} output). */
   String version();

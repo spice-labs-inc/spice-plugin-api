@@ -117,6 +117,31 @@ public interface SpiceCommandPlugin {
   }
 
   /**
+   * The keys, among this plugin's claimed groups, whose values name filesystem paths.
+   *
+   * <p>Dotted, group first: {@code "pipeline.staging_dir"}, {@code "paths.report_cli"}.
+   *
+   * <p>This exists because of Docker. The {@code spice} wrapper runs on the host and mounts
+   * the paths it can see — which, until now, meant the paths named on the command line,
+   * because that is all a shell script can read without understanding configuration. A path
+   * written in a config file was invisible to it, so a run would either fail or, worse,
+   * write inside the container and lose the result when it exited.
+   *
+   * <p>Declaring them here lets the host resolve those values and mount them, without the
+   * wrapper parsing TOML and without anybody maintaining a second copy of a schema they do
+   * not own. A plugin that names no paths in its configuration returns nothing, which is the
+   * default.
+   *
+   * <p>A key that is absent from the user's configuration is simply skipped — this is a
+   * statement about which keys <em>would</em> be paths, not a claim that they are set.
+   *
+   * @return dotted {@code group.key} names, e.g. {@code List.of("pipeline.staging_dir")}
+   */
+  default java.util.List<String> configurationPathKeys() {
+    return java.util.List.of();
+  }
+
+  /**
    * A PowerShell tab-completion fragment contributing completions for this plugin's
    * command tree, or an empty string for none (the default).
    *
