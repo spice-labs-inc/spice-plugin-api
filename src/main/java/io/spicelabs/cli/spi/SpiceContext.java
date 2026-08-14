@@ -38,15 +38,28 @@ public interface SpiceContext {
    * changes incompatibly; {@code spice} only mounts plugins whose
    * {@link SpiceCommandPlugin#apiVersion()} matches this value.
    */
-  int API_VERSION = 1;
+  int API_VERSION = 2;
 
   /** The running {@code spice} CLI version (e.g. for plugin {@code --version} output). */
   String version();
 
   /**
    * The resolved Spice Pass (JWT) from the {@code SPICE_PASS} environment variable, or
-   * empty if it is not set. Plugins that upload to the platform should use this rather
-   * than reading the environment directly, so resolution stays consistent.
+   * empty if it is not set. This is the raw <em>credential</em>, for plugins that upload to
+   * the platform; to find out what the pass <em>says</em>, use {@link #passClaims()} rather
+   * than decoding it yourself.
    */
   Optional<String> spicePass();
+
+  /**
+   * The claims carried by this run's Spice Pass, decoded once by {@code spice}. A plugin
+   * reads what it needs from here instead of parsing the pass or consulting system
+   * properties, so built-in commands and plugins always agree on the values in force.
+   *
+   * @return the pass's claims; never {@code null}, and {@link SpicePassClaims#EMPTY} when
+   *     there is no pass
+   */
+  default SpicePassClaims passClaims() {
+    return SpicePassClaims.EMPTY;
+  }
 }
