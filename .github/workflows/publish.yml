@@ -74,6 +74,43 @@ jobs:
           </settings>
           EOF
 
+      - name: Verify the tag matches the version in the pom
+        env:
+          VERSION: ${{ steps.validate.outputs.VERSION }}
+        run: |
+          # `versions:set` below overwrites whatever the pom says, so without this
+          # check the tag is the only thing deciding what ships — and a tag is easy to
+          # get wrong. The pom is where the intended version is declared and reviewed;
+          # requiring them to agree makes the tag a confirmation rather than a
+          # decision made alone at push time.
+          POM_VERSION=$(mvn --batch-mode --quiet help:evaluate \
+            -Dexpression=project.version -DforceStdout)
+          if [ "${POM_VERSION%-SNAPSHOT}" != "$VERSION" ]; then
+            echo "Tag v${VERSION} does not match pom version ${POM_VERSION}." >&2
+            echo "Set the pom to ${VERSION}-SNAPSHOT before tagging, or tag v${POM_VERSION%-SNAPSHOT}." >&2
+            exit 1
+          fi
+          echo "Tag v${VERSION} matches pom ${POM_VERSION}."
+
+      - name: Verify the major version matches SpiceContext.API_VERSION
+        env:
+          VERSION: ${{ steps.validate.outputs.VERSION }}
+        run: |
+          # `spice` mounts a plugin only when its apiVersion() equals the CLI's
+          # API_VERSION exactly, so every bump of that constant breaks every existing
+          # plugin. Tying it to the major version means the coordinate a consumer
+          # depends on carries that fact, rather than leaving it in a constant nobody
+          # sees until a plugin silently stops loading.
+          API_VERSION=$(grep -oE "int API_VERSION = [0-9]+" \
+            src/main/java/io/spicelabs/cli/spi/SpiceContext.java | grep -oE "[0-9]+$")
+          MAJOR="${VERSION%%.*}"
+          if [ "$MAJOR" != "$API_VERSION" ]; then
+            echo "Major version ${MAJOR} does not match SpiceContext.API_VERSION ${API_VERSION}." >&2
+            echo "An API_VERSION bump is a breaking change and requires a major release." >&2
+            exit 1
+          fi
+          echo "Major version ${MAJOR} matches API_VERSION ${API_VERSION}."
+
       - name: Set plugin-api version from tag
         run: mvn --batch-mode versions:set -DnewVersion=${{ steps.validate.outputs.VERSION }} -DgenerateBackupPoms=false
 

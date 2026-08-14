@@ -42,6 +42,16 @@ The SPI is SemVer'd on its Java API. Bump the `<version>`:
 `SpiceContext.API_VERSION` is the runtime contract version; `spice` refuses to
 mount a plugin whose `apiVersion()` differs from its own.
 
+**The major version is `SpiceContext.API_VERSION`.** They are one number written
+in two places, so `5.x.y` is the release that speaks SPI 5 and nothing else has
+to be looked up to know that. The check is mechanical, not stylistic: because
+`spice` compares `apiVersion()` for *equality*, bumping that constant stops every
+existing plugin from being mounted — which is a breaking change however additive
+the Java surface looks, and the coordinate a consumer depends on should say so.
+
+`publish.yml` refuses to release a tag that disagrees with either the pom version
+or `API_VERSION`.
+
 ## Cutting a release
 
 1. Ensure the API is what you want and the `<version>` reflects the intended
