@@ -34,6 +34,11 @@ import java.util.Optional;
  */
 public interface SpiceContext {
 
+  // An implementation must not print the pass, or anything decoded from it, in toString. That is
+  // easy to satisfy by accident -- Object.toString says nothing -- and easy to lose by accident,
+  // since a record or Lombok @Data generates one over every field. Whoever implements this holds
+  // a live credential, so the obligation belongs in the interface rather than in each of them.
+
   /**
    * The SPI contract version. Bumped when {@link SpiceCommandPlugin} or this interface
    * changes incompatibly; {@code spice} only mounts plugins whose
@@ -49,6 +54,12 @@ public interface SpiceContext {
    * empty if it is not set. This is the raw <em>credential</em>, for plugins that upload to
    * the platform; to find out what the pass <em>says</em>, use {@link #passClaims()} rather
    * than decoding it yourself.
+   *
+   * <p><strong>Do not print this.</strong> It is a bearer token: anything holding it can act as
+   * the project until it expires. Note that {@code Optional.toString} prints the value it wraps,
+   * so {@code log.info("pass: {}", ctx.spicePass())} publishes the credential in full rather than
+   * saying {@code Optional[...]}. Log {@link SpicePassClaims#jwtId()} instead — it identifies a
+   * pass without being one.
    */
   Optional<String> spicePass();
 

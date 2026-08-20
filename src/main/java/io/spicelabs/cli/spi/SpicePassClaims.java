@@ -42,6 +42,12 @@ import java.util.Optional;
  *
  * <p>Every accessor is empty when the pass omits the claim, or when there is no pass at all.
  * A plugin that genuinely requires a pass should report that itself.
+ *
+ * <p>The claims are not themselves the credential, but they name the project and organisation a
+ * run belongs to and the endpoint it uploads to, so an implementation should not print them in
+ * {@code toString} either. {@link #additionalClaims()} returns a {@code Map}, whose
+ * {@code toString} prints every value it holds — worth remembering before logging the whole map
+ * to find out what is in it. {@link #jwtId()} identifies a pass without disclosing anything.
  */
 public interface SpicePassClaims {
 
