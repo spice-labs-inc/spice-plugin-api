@@ -84,7 +84,12 @@ def main(argv):
     else:
         ok = current in expected
 
+    # `version` and `VERSION` are both emitted: the two spellings are already in
+    # use across the Spice Labs publish workflows (ginger-j/saffron/annatto read
+    # `version`, spice-bom/spice-labs-cli read `VERSION`), and emitting both lets
+    # this script drop into every repo unchanged.
     out = [
+        ("version", tag[1:]),
         ("VERSION", tag[1:]),
         ("successor_ok", "true" if ok else "false"),
         ("auto_publish", "true" if ok else "false"),
