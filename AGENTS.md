@@ -37,3 +37,6 @@ and fails its CI on orphans, so keep these rules when you write or change tests:
 
 - No tests yet. If any are added, list their source root under `tests[]` in
   `test-fixtures.json`. The jar records its commit in `META-INF/git/spice-plugin-api.properties`.
+- This SPI says what a plugin cannot work out for itself. A capability is not that: whether a
+  plugin's command exists is already answered by whether the plugin is on the classpath, and a
+  plugin can see which of the tools it drives are installed. Resist adding capability flags.
