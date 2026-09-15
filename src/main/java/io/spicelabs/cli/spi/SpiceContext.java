@@ -123,4 +123,26 @@ public interface SpiceContext {
   default Map<String, Object> configuration() {
     return Map.of();
   }
+
+  /**
+   * Whether this build of {@code spice} never reaches the network.
+   *
+   * <p>Some distributions are assembled to run with no connectivity at all. {@code spice}
+   * has already refused every upload option before a plugin runs; a plugin with an upload
+   * path of its own must refuse likewise rather than attempting a connection that cannot
+   * succeed.
+   *
+   * <p>This is deliberately the only thing said here about what a build can do. Everything
+   * else is a <em>capability</em>, and a capability is already expressed by whether the code
+   * that provides it is present: a plugin that is not on the classpath contributes no
+   * command, and a plugin can see for itself which of the tools it drives are installed.
+   * Being airgapped is not a capability but a policy, and nothing on the classpath says it,
+   * which is why it needs saying here.
+   *
+   * <p>A default rather than a new contract version: an older plugin never asks, and a newer
+   * plugin on an older host sees {@code false}, which is what that host enforces.
+   */
+  default boolean airgapped() {
+    return false;
+  }
 }
