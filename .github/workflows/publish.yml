@@ -78,21 +78,26 @@ jobs:
           EOF
 
       - name: Set plugin-api version from tag
-        run: mvn --batch-mode versions:set -DnewVersion=${{ steps.validate.outputs.VERSION }} -DgenerateBackupPoms=false
+        run: ./mvnw --batch-mode versions:set -DnewVersion=${{ steps.validate.outputs.VERSION }} -DgenerateBackupPoms=false
 
       - name: Publish plugin-api to GitHub Packages
-        run: mvn --batch-mode clean deploy -P github
+        run: ./mvnw --batch-mode clean deploy -P github
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GPG_PASSPHRASE: ${{ secrets.MAVEN_CENTRAL_GPG_PASSPHRASE }}
 
+      # Maven comes from the wrapper (mvnw, .mvn/wrapper), pinned to 3.9.15, not from the runner image.
+      # Maven 3.10 (ubuntu-24.04 since 2026-10-04) writes local-repository bookkeeping
+      # (maven-metadata-local.xml, _remote.repositories) into central-publishing's staging
+      # directory, the plugin bundles it, and Central rejects the deployment: "Bundle has
+      # content that does NOT have a .pom file". spice-probe lost three versions to it.
       - name: Publish plugin-api to Maven Central
         # central.autoPublish is `true` normally. When the tag is not a natural
         # successor it is `false`, so the deployment is uploaded and validated
         # but parks in the Central Portal awaiting a human decision rather than
         # becoming a permanent, undeletable release.
         run: |
-          mvn --batch-mode clean deploy -P maven-central \
+          ./mvnw --batch-mode clean deploy -P maven-central \
             -Dcentral.autoPublish=${{ steps.validate.outputs.auto_publish }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
